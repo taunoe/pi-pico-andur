@@ -2594,15 +2594,15 @@
 					)
 				)
 			)
-			(property "Value" ""
-				(at 0 0 0)
+			(property "Value" "Tauno_Oled_096_SSD1306"
+				(at -12.954 12.192 0)
 				(effects
 					(font
 						(size 1.27 1.27)
 					)
 				)
 			)
-			(property "Footprint" ""
+			(property "Footprint" "Taunoe_footprints:Tauno_OLED_ssd1306"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2620,7 +2620,7 @@
 					(hide yes)
 				)
 			)
-			(property "Description" ""
+			(property "Description" "Tauno_Oled_096_SSD1306"
 				(at 0 0 0)
 				(effects
 					(font
@@ -2709,7 +2709,7 @@
 				(pin power_in line
 					(at -2.54 11.43 270)
 					(length 2.54)
-					(name "GND"
+					(name "VCC"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2727,7 +2727,7 @@
 				(pin power_in line
 					(at 0 11.43 270)
 					(length 2.54)
-					(name "VCC"
+					(name "GND"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -3604,6 +3604,16 @@
 	)
 	(wire
 		(pts
+			(xy 186.69 35.56) (xy 186.69 43.18)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0f3127ed-0777-4d85-a844-aab333d7dab7")
+	)
+	(wire
+		(pts
 			(xy 254 69.85) (xy 254 81.28)
 		)
 		(stroke
@@ -3724,16 +3734,6 @@
 	)
 	(wire
 		(pts
-			(xy 199.39 36.83) (xy 199.39 33.02)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "5de4ac92-2f8e-4f93-826d-fcd4f9c1f95f")
-	)
-	(wire
-		(pts
 			(xy 246.38 78.74) (xy 246.38 81.28)
 		)
 		(stroke
@@ -3751,16 +3751,6 @@
 			(type default)
 		)
 		(uuid "6338cdd9-b021-4991-8c80-1ff6e067dfbb")
-	)
-	(wire
-		(pts
-			(xy 186.69 33.02) (xy 186.69 39.37)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "63860bf8-954d-48b9-a593-f9f313353167")
 	)
 	(wire
 		(pts
@@ -3924,6 +3914,16 @@
 	)
 	(wire
 		(pts
+			(xy 201.93 36.83) (xy 201.93 35.56)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9306bd08-cea5-4d5b-9913-206d5d985938")
+	)
+	(wire
+		(pts
 			(xy 142.24 35.56) (xy 120.65 35.56)
 		)
 		(stroke
@@ -4024,16 +4024,6 @@
 	)
 	(wire
 		(pts
-			(xy 201.93 31.75) (xy 201.93 36.83)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c2f010c3-f3c5-4adf-89d7-e4698b2fe77e")
-	)
-	(wire
-		(pts
 			(xy 38.1 38.1) (xy 62.23 38.1)
 		)
 		(stroke
@@ -4061,6 +4051,16 @@
 			(type default)
 		)
 		(uuid "cc031b41-67d5-4f0a-b8e3-2661e57877ae")
+	)
+	(wire
+		(pts
+			(xy 201.93 35.56) (xy 186.69 35.56)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cd029069-f5ce-4475-b48e-4d22591e8f67")
 	)
 	(wire
 		(pts
@@ -4134,13 +4134,13 @@
 	)
 	(wire
 		(pts
-			(xy 199.39 33.02) (xy 186.69 33.02)
+			(xy 199.39 31.75) (xy 199.39 36.83)
 		)
 		(stroke
 			(width 0)
 			(type default)
 		)
-		(uuid "f04e1b6a-8a82-4b5d-9f61-ee9fa1ee9a50")
+		(uuid "f00085db-695c-4e14-acae-a21c8b9595d1")
 	)
 	(wire
 		(pts
@@ -4511,7 +4511,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "~"
+		(property "Value" "Tauno_Oled_096_SSD1306"
 			(at 214.63 50.1649 0)
 			(effects
 				(font
@@ -4520,7 +4520,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Taunoe_footprints:Tauno_OLED_ssd1306"
 			(at 201.93 48.26 0)
 			(effects
 				(font
@@ -4538,7 +4538,7 @@
 				(hide yes)
 			)
 		)
-		(property "Description" ""
+		(property "Description" "Tauno_Oled_096_SSD1306"
 			(at 201.93 48.26 0)
 			(effects
 				(font
@@ -5231,7 +5231,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 186.69 39.37 0)
+		(at 186.69 43.18 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -5240,7 +5240,7 @@
 		(fields_autoplaced yes)
 		(uuid "5faf8f80-d579-40ed-8eb6-8c195e23326e")
 		(property "Reference" "#PWR04"
-			(at 186.69 45.72 0)
+			(at 186.69 49.53 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5249,7 +5249,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 186.69 44.45 0)
+			(at 186.69 48.26 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5257,7 +5257,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 186.69 39.37 0)
+			(at 186.69 43.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5266,7 +5266,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 186.69 39.37 0)
+			(at 186.69 43.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -5275,7 +5275,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 186.69 39.37 0)
+			(at 186.69 43.18 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6474,7 +6474,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 201.93 31.75 0)
+		(at 199.39 31.75 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6483,7 +6483,7 @@
 		(fields_autoplaced yes)
 		(uuid "e42113bf-5e72-4b39-9744-e96455a8102d")
 		(property "Reference" "#PWR03"
-			(at 201.93 35.56 0)
+			(at 199.39 35.56 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6492,7 +6492,7 @@
 			)
 		)
 		(property "Value" "+3.3V"
-			(at 201.93 26.67 0)
+			(at 199.39 26.67 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6500,7 +6500,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 201.93 31.75 0)
+			(at 199.39 31.75 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6509,7 +6509,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 201.93 31.75 0)
+			(at 199.39 31.75 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6518,7 +6518,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 201.93 31.75 0)
+			(at 199.39 31.75 0)
 			(effects
 				(font
 					(size 1.27 1.27)
