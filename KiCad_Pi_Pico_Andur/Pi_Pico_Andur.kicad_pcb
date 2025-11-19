@@ -5198,7 +5198,7 @@
 			)
 		)
 		(property "Value" "Tauno_Oled_096_SSD1306"
-			(at 0 1 0)
+			(at 0.4 -2.125 0)
 			(unlocked yes)
 			(layer "F.Fab")
 			(uuid "45543a1b-a0c7-4eba-ad2c-289b7df1e21e")
@@ -5248,7 +5248,7 @@
 			)
 			(fill no)
 			(layer "F.SilkS")
-			(uuid "0d773927-d94c-4a50-a3dc-984ddce16216")
+			(uuid "bc150712-53cb-422e-acb8-469f25fb0de5")
 		)
 		(fp_text user "0.96 OLED"
 			(at -3.64 18.95 0)
@@ -5316,7 +5316,7 @@
 			)
 		)
 		(fp_text user "${REFERENCE}"
-			(at 0 2.5 0)
+			(at 0.025 -3.7 0)
 			(unlocked yes)
 			(layer "F.Fab")
 			(uuid "af014c79-1061-47a3-92d2-e9eb563d6a5b")
@@ -5375,13 +5375,52 @@
 			(clearance 0.3)
 			(uuid "dab7d120-609c-41fd-a173-486de82f6c8e")
 		)
+		(pad "5" smd roundrect
+			(at -3.83 2.5)
+			(size 1.905 4)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(roundrect_rratio 0.15)
+			(uuid "369cb006-89d8-4eda-b3c0-684ba9b0f019")
+		)
+		(pad "6" smd roundrect
+			(at -1.24 2.54)
+			(size 1.905 4)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(roundrect_rratio 0.15)
+			(uuid "f5519bc1-382a-4c4f-a192-b801230e19e3")
+		)
+		(pad "7" smd roundrect
+			(at 1.23 2.55)
+			(size 1.905 4)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(roundrect_rratio 0.15)
+			(uuid "517c707f-c803-4816-8f4e-37f383cc2a67")
+		)
+		(pad "8" smd roundrect
+			(at 3.83 2.56)
+			(size 1.905 4)
+			(layers "F.Cu" "F.Mask" "F.Paste")
+			(roundrect_rratio 0.15)
+			(uuid "66a36796-a8b4-41a2-92c0-633249272cf9")
+		)
 		(group ""
-			(uuid "f7253569-0ef0-4f5a-b210-c7241e95031a")
+			(uuid "d43d3c7d-4b0e-4910-bbbc-0d11ec64026b")
 			(members "325f4f3b-973c-49e9-9002-8f131db61e5f" "39b993a4-4b31-40be-93d6-c1feb2614317"
 				"dab7d120-609c-41fd-a173-486de82f6c8e" "f1d31cbd-686a-4770-9fab-e0d45da683d1"
 			)
 		)
 		(embedded_fonts no)
+		(model "/home/taunoerik/Documents/MyGitHub/pi-pico-andur/3d_models/OLED_IIC_096.step"
+			(offset
+				(xyz 3.8 -5.1 6)
+			)
+			(scale
+				(xyz 1 1 1)
+			)
+			(rotate
+				(xyz -180 -0 90)
+			)
+		)
 	)
 	(footprint "Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal"
 		(layer "F.Cu")
