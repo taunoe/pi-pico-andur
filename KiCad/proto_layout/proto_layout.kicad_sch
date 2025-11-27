@@ -1660,16 +1660,16 @@
 					(hide yes)
 				)
 			)
-			(symbol "Tauno_Pi_Pico_2_0_1"
+			(symbol "Tauno_Pi_Pico_2_1_1"
 				(rectangle
 					(start -13.97 -5.08)
 					(end 13.97 -58.42)
 					(stroke
 						(width 0)
-						(type default)
+						(type solid)
 					)
 					(fill
-						(type none)
+						(type background)
 					)
 				)
 				(rectangle
@@ -1677,14 +1677,12 @@
 					(end 3.81 -6.35)
 					(stroke
 						(width 0)
-						(type default)
+						(type solid)
 					)
 					(fill
-						(type none)
+						(type background)
 					)
 				)
-			)
-			(symbol "Tauno_Pi_Pico_2_1_1"
 				(text "Raspberry Pi Pico 2 board"
 					(at -0.254 -32.258 900)
 					(effects
