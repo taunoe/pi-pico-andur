@@ -6,7 +6,7 @@
 	(paper "A4")
 	(title_block
 		(title "Anduri PCB skeem")
-		(date "2025-11-26")
+		(date "2025-12-01")
 		(rev "03")
 		(company "Tauno Erik")
 	)
@@ -3420,6 +3420,18 @@
 		(color 0 0 0 0)
 		(uuid "46f1118e-8e9b-44f3-b873-b83127aad120")
 	)
+	(junction
+		(at 44.45 101.6)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "7f36e13b-2f69-40c8-8f30-6b5ce3a1c0d7")
+	)
+	(junction
+		(at 52.07 96.52)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "a4e0de5d-64ae-4bce-b53c-7010a1b33603")
+	)
 	(wire
 		(pts
 			(xy 67.31 109.22) (xy 67.31 158.75)
@@ -3459,6 +3471,16 @@
 			(type default)
 		)
 		(uuid "095d22a1-3473-4023-b001-c7f7b08e0425")
+	)
+	(wire
+		(pts
+			(xy 30.48 69.85) (xy 52.07 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0c9b4cec-0331-4fc6-8e30-a0e1db7db992")
 	)
 	(wire
 		(pts
@@ -3852,6 +3874,16 @@
 	)
 	(wire
 		(pts
+			(xy 52.07 69.85) (xy 52.07 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "55a55bcc-ed66-47fe-a2ac-3e8071dac706")
+	)
+	(wire
+		(pts
 			(xy 262.89 123.19) (xy 262.89 125.73)
 		)
 		(stroke
@@ -3869,6 +3901,16 @@
 			(type default)
 		)
 		(uuid "57116e38-d7b2-4056-8dc0-f06b860987bf")
+	)
+	(wire
+		(pts
+			(xy 30.48 53.34) (xy 30.48 69.85)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5b9c8949-a5ea-4c84-b53a-c045f506298c")
 	)
 	(wire
 		(pts
@@ -3982,7 +4024,7 @@
 	)
 	(wire
 		(pts
-			(xy 46.99 96.52) (xy 60.96 96.52)
+			(xy 46.99 96.52) (xy 52.07 96.52)
 		)
 		(stroke
 			(width 0)
@@ -4059,6 +4101,16 @@
 			(type default)
 		)
 		(uuid "79579109-bdce-4263-9385-05ad3bd45827")
+	)
+	(wire
+		(pts
+			(xy 44.45 101.6) (xy 52.07 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "79fd322e-6b27-4ddb-825c-ed5986b899bd")
 	)
 	(wire
 		(pts
@@ -4232,7 +4284,7 @@
 	)
 	(wire
 		(pts
-			(xy 38.1 101.6) (xy 52.07 101.6)
+			(xy 38.1 101.6) (xy 44.45 101.6)
 		)
 		(stroke
 			(width 0)
@@ -4289,6 +4341,16 @@
 			(type default)
 		)
 		(uuid "9e844463-1fdd-4ca1-8409-66c8ab9d754f")
+	)
+	(wire
+		(pts
+			(xy 27.94 71.12) (xy 44.45 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9fc79f1d-c0ed-4934-a71a-0c8697fc071a")
 	)
 	(wire
 		(pts
@@ -4399,6 +4461,26 @@
 			(type default)
 		)
 		(uuid "b1bcdf29-c36b-49c3-85e3-52b80bae68c5")
+	)
+	(wire
+		(pts
+			(xy 52.07 96.52) (xy 60.96 96.52)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b3129cff-bb58-4324-a3e0-5fb9df856b5c")
+	)
+	(wire
+		(pts
+			(xy 44.45 71.12) (xy 44.45 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b35b1a8f-e42c-4059-bf44-b370dafbfd40")
 	)
 	(wire
 		(pts
@@ -4772,6 +4854,16 @@
 	)
 	(wire
 		(pts
+			(xy 27.94 53.34) (xy 27.94 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "edf095f1-4f2e-443a-b4ae-f267504c65c3")
+	)
+	(wire
+		(pts
 			(xy 158.75 34.29) (xy 157.48 34.29)
 		)
 		(stroke
@@ -4900,7 +4992,7 @@
 		)
 		(uuid "1fe60678-8c34-46b6-9474-8030a207fa19")
 	)
-	(label "External_GND"
+	(label "External_GND1"
 		(at 248.92 130.81 0)
 		(effects
 			(font
@@ -4920,7 +5012,7 @@
 		)
 		(uuid "3294b037-ab92-4d6a-8a95-9d8e65712d4b")
 	)
-	(label "External_GPIO"
+	(label "External_GPIO2"
 		(at 248.92 152.4 0)
 		(effects
 			(font
@@ -4940,7 +5032,7 @@
 		)
 		(uuid "492377d2-dfdc-40e2-85fc-c89c142175ac")
 	)
-	(label "External_VCC"
+	(label "External_VCC2"
 		(at 248.92 147.32 0)
 		(effects
 			(font
@@ -4950,7 +5042,7 @@
 		)
 		(uuid "4d2970be-bb0b-4698-9686-7c1f3da10cb7")
 	)
-	(label "External_GPIO"
+	(label "External_GPIO1"
 		(at 248.92 128.27 0)
 		(effects
 			(font
@@ -4960,7 +5052,7 @@
 		)
 		(uuid "6202e9fa-135d-472e-bbac-046a80d3c9e1")
 	)
-	(label "External_VCC"
+	(label "External_VCC1"
 		(at 248.92 123.19 0)
 		(effects
 			(font
@@ -5020,7 +5112,7 @@
 		)
 		(uuid "a2a3f4f5-3491-4816-ab70-0c87a2a33b0f")
 	)
-	(label "External_GND"
+	(label "External_GND2"
 		(at 248.92 154.94 0)
 		(effects
 			(font
