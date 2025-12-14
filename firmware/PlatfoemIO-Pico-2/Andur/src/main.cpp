@@ -4,13 +4,14 @@
  *  -Pico 2
  *  -TOF400C/VL53L1X
  * Started: 29.09.2025
- * Edited:  12.12.2025
+ * Edited:  14.12.2025
  * 
  * Links:
  * - https://arduino-pico.readthedocs.io/en/latest/platformio.html
  * - https://randomnerdtutorials.com/raspberry-pi-pico-i2c-scanner-arduino/
  * - https://github.com/pololu/vl53l1x-arduino/
  * - https://github.com/sparkfun/SparkFun_VL53L1X_Arduino_Library
+ * - https://github.com/adafruit/Adafruit_VL53L0X/tree/master
  * 
  * I2C0: SDA GPIOs -> GPIO0, GPIO4, GPIO8, GPIO12, GPIO16, GPIL20
  * I2C0: SCL GPIOs -> GPIO1, GPIO5, GPIO9, GPIO13, GPIO17, GPIO21
@@ -163,7 +164,7 @@ void loop() {
   // Sensor
   VL53L0X_RangingMeasurementData_t measure;
 
-  vl53lxx_sensor.rangingTest(&measure, true); // pass in 'true' to get debug data printout!
+  vl53lxx_sensor.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
 
   Serial.print("measure.RangeStatus ");
   Serial.print(measure.RangeStatus);
