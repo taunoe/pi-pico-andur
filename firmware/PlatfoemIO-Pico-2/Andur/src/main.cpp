@@ -4,7 +4,7 @@
  *  -Pico 2
  *  -TOF400C/VL53L1X
  * Started: 29.09.2025
- * Edited:  14.12.2025
+ * Edited:  16.12.2025
  * 
  * Links:
  * - https://arduino-pico.readthedocs.io/en/latest/platformio.html
@@ -33,9 +33,10 @@
 #include <Adafruit_SSD1306.h>
 /* Rotary Encoder */
 // https://www.upesy.com/blogs/tutorials/rotary-encoder-raspberry-pi-pico-with-arduino-code#
-#include "hardware/pio.h"
-#include "quadrature.pio.h"  // https://github.com/jamon/pi-pico-pio-quadrature-encoder/tree/main
+//#include "hardware/pio.h"
+//#include "quadrature.pio.h"  // https://github.com/jamon/pi-pico-pio-quadrature-encoder/tree/main
 
+#include "pio_encoder.h" // https://github.com/gbr1/rp2040-encoder-library
 
 
 /********************************
@@ -51,9 +52,12 @@
 //#define SELECTED_GREEN_LED 16  // Selected distance
 //#define SELECTED_RED_LED   17  // Selected distance
 
+// Left
 #define MIN_RE_CLK_PIN     16
 #define MIN_RE_DT_PIN      17
 #define MIN_RE_SW_PIN      18
+
+// Right
 #define MAX_RE_CLK_PIN     19
 #define MAX_RE_DT_PIN      20
 #define MAX_RE_SW_PIN      21
@@ -100,21 +104,28 @@ uint selected_value_max = 100;
 /********************************
   Rotary Encoder MAX
 *********************************/
+PioEncoder left_rotary_encoder(MIN_RE_CLK_PIN);
+PioEncoder right_rotary_encoder(MAX_RE_CLK_PIN);
+
+/*
 int32_t current_encoder_value_max = selected_value_max;
 uint32_t last_pio_count_max = 0;
 PIO re_pio_max = pio0;
 uint re_offset_max;
 uint re_sm_max;
+*/
 
 
 /********************************
   Rotary Encoder MIN
 *********************************/
+/*
 int32_t current_encoder_value_min = selected_value_min;
 uint32_t last_pio_count_min = 0;
 PIO re_pio_min = pio0;
 uint re_offset_min;
 uint re_sm_min;
+*/
 
 
 /********************************
@@ -137,13 +148,19 @@ void setup() {
   Wire.begin();
   //Wire.setClock(400000); // use 400 kHz I2C
 
-  delay(3000);
-  i2c_scanner();
+  //delay(3000);
+  //i2c_scanner();
 
   init_LED_pins();
   init_display();
   init_vl53lxx_sensor();
 
+  left_rotary_encoder.begin();
+  left_rotary_encoder.flip();
+  right_rotary_encoder.begin();
+  right_rotary_encoder.flip();
+
+  /*
   // Rotary encoder 1 MAX
   re_offset_max = pio_add_program(re_pio_max, &quadratureA_program);
   re_sm_max = pio_claim_unused_sm(re_pio_max, true);
@@ -153,6 +170,7 @@ void setup() {
   re_offset_min = pio_add_program(re_pio_min, &quadratureA_program);
   re_sm_min = pio_claim_unused_sm(re_pio_min, true);
   quadratureA_program_init(re_pio_min, re_sm_min, re_offset_min, MIN_RE_CLK_PIN, MIN_RE_DT_PIN);
+  */
 }
 
 /********************************
@@ -189,41 +207,49 @@ void loop() {
     //Serial.print("\tKeskmine: ");
     //Serial.print(avg_distance);
 
-     //////
-  display.clearDisplay();
+    //////
+    display.clearDisplay();
 
-  display.setTextSize(2);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10,0);
-  display.print(distance);//avg_distance
-  display.println(F(" mm"));
+    display.setTextSize(2);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(10,0);
+    display.print(distance);  // avg_distance
+    display.println(F(" mm"));
 
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(10,20);
-  display.print(F("min:"));
-  display.print(selected_value_min);
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(10,20);
+    display.print(F("min:"));
+    display.print(selected_value_min);
 
-  //display.setTextSize(1);
-  //display.setTextColor(SSD1306_WHITE);
-  display.setCursor(50,20);
-  display.print(F("  max:"));
-  display.print(selected_value_max);
+    //display.setTextSize(1);
+    //display.setTextColor(SSD1306_WHITE);
+    display.setCursor(50,20);
+    display.print(F("  max:"));
+    display.print(selected_value_max);
 
-  display.display();
+    display.display();
   ///
 
   }
-
-  delay(100);
-
+  
   long end_time = millis();
 
-  
+  Serial.print("left_rotary_encoder: ");
+  Serial.println(left_rotary_encoder.getCount());
+  Serial.print("right_rotary_encoder: ");
+  Serial.println(right_rotary_encoder.getCount());
 
- 
+  delay(100);
+}
 
-  /* Rotary Encoders MAX */
+
+/********************************
+  Core 1 loop
+*********************************/
+void loop1() {
+  /*
+  // Rotary Encoders MAX 
   pio_sm_exec_wait_blocking(re_pio_max, re_sm_max, pio_encode_in(pio_x, 32));
   uint32_t new_pio_count_max = pio_sm_get_blocking(re_pio_max, re_sm_max);
 
@@ -241,17 +267,17 @@ void loop() {
   } else if (current_encoder_value_max > ENCODER_MAX_VALUE) {
     current_encoder_value_max = ENCODER_MAX_VALUE;
   }
-    selected_value_max = current_encoder_value_max;
+  selected_value_max = current_encoder_value_max;
 
   if (selected_value_max <= selected_value_min + ENCODER_SMALLEST_RANGE)
   {
     selected_value_max = selected_value_min + ENCODER_SMALLEST_RANGE;
   }
 
-    printf("MAX Value: %ld\n", current_encoder_value_max);
+  printf("MAX Value: %ld\n", current_encoder_value_max);
 
 
-  /* MIN */
+  // MIN 
   pio_sm_exec_wait_blocking(re_pio_min, re_sm_min, pio_encode_in(pio_x, 32));
   uint32_t new_pio_count_min = pio_sm_get_blocking(re_pio_min, re_sm_min);
 
@@ -278,13 +304,9 @@ void loop() {
   }
   
   printf("MIN Value: %ld\n", current_encoder_value_min);
-}
+  */
 
-
-/********************************
-  Core 1 loop
-*********************************/
-void loop1() {
+  //////////////////////////////////////////
   if (distance < selected_value_min || distance > selected_value_max) {
     // Red LED ON
     digitalWrite(STATUS_GREEN_LED, HIGH);
