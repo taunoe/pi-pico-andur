@@ -82,7 +82,7 @@ constexpr int DEBOUNCE_DELAY = 50;
 
 // Counters
 constexpr int MAX_ERRORS = 10;
-constexpr int CYCLE_MAX_COUNT = 10000; // Reset after
+constexpr int CYCLE_MAX_COUNT = 6000; // Reset after
 
 /*******************************************************************
  Global Variables
@@ -155,8 +155,6 @@ void setup() {
   selected_value_min = read_memory_min_value();
   selected_value_max = read_memory_max_value();
 
-  //pinMode(SENSOR_XSHUT_PIN, OUTPUT);
-  //pinMode(SENSOR_XSHUT_PIN, INPUT_PULLUP);
   init_vl53lxx_sensor();
 
   init_display();
@@ -209,7 +207,6 @@ void loop() {
     recover_vl53lxx_sensor();
     cycle_counter = 0;
   }
-
 }
 
 
@@ -343,8 +340,8 @@ void init_vl53lxx_sensor() {
   Serial.println("Init VL53L0X sensor");
 
   // Shutdown pin
-  //pinMode(SENSOR_XSHUT_PIN, OUTPUT);
-  //pinMode(SENSOR_XSHUT_PIN, INPUT_PULLUP);
+  pinMode(SENSOR_XSHUT_PIN, OUTPUT);
+  pinMode(SENSOR_XSHUT_PIN, INPUT_PULLUP);
 
   while (!vl53lxx_sensor.begin()) {
     Serial.println(F("VL53L0X sensor failed!"));
@@ -354,6 +351,12 @@ void init_vl53lxx_sensor() {
     vl53lxx_sensor_ON();
     delay(100);
   }
+
+  // Adafruit_VL53L0X::VL53L0X_SENSE_DEFAULT
+  // Adafruit_VL53L0X::VL53L0X_SENSE_LONG_RANGE
+  // Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_SPEED
+  // Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_ACCURACY
+  vl53lxx_sensor.configSensor(Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_ACCURACY);
 }
 
 /*******************************************************************
