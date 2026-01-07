@@ -82,7 +82,7 @@ constexpr int DEBOUNCE_DELAY = 50;
 
 // Counters
 constexpr int MAX_ERRORS = 10;
-constexpr int CYCLE_MAX_COUNT = 5000; // Reset after
+constexpr int CYCLE_MAX_COUNT = 10000; // Reset after
 
 /*******************************************************************
  Global Variables
@@ -131,6 +131,7 @@ int write_memory_min_value(uint32_t value);
 int write_memory_max_value(uint32_t value);
 
 int process_data(uint local_dis);
+void handle_errors(int error);
 
 /*******************************************************************
  SETUP Core 0
@@ -187,47 +188,18 @@ void loop() {
   //Serial.print("measure.RangeStatus ");
   //Serial.print(measure.RangeStatus);
   //Serial.print(" D=");
-
-  if (measure.RangeStatus == 0) {
-    //Serial.println(local_distace);
-    
-    cycle_counter++;
-
+  int status = measure.RangeStatus;
+  if (status == 0) {
     mutex_enter_blocking(&my_mutex);
       distance = measure.RangeMilliMeter; // Global
       local_distace = distance;
     mutex_exit(&my_mutex);
 
-    // Reset error counter on success
-    error_count = process_data(local_distace);
+    error_count = process_data(local_distace); // Reset error counter on success
+    cycle_counter++;
 
-  } else if (measure.RangeStatus == 1) {
-    error_count++;
-    Serial.print("Sigma fail ");
-    Serial.println(error_count);
-  } else if (measure.RangeStatus == 2) {
-    error_count++;
-    Serial.print("Signal fail");
-    Serial.println(error_count);
-  } else if (measure.RangeStatus == 3) {
-    error_count++;
-    Serial.print("Range wrap");
-    Serial.println(error_count);
-  } else if (measure.RangeStatus == 4) {
-    error_count++;
-    Serial.print("Out of range");
-    Serial.println(error_count);
   } else {
-    error_count++;
-    Serial.print("Error count: ");
-    Serial.println(error_count);
-  }
-
-  if (error_count >= MAX_ERRORS) {
-    Serial.print("Error count: ");
-    Serial.println(error_count);
-    recover_vl53lxx_sensor();
-    error_count = 0; // Reset counter after attempting recovery
+    handle_errors(status);
   }
 
   // Otherwise the sensor will freeze!
@@ -648,6 +620,9 @@ void recover_vl53lxx_sensor() {
   }
 }
 
+
+/*******************************************************************
+ *******************************************************************/
 int process_data(uint local_dis) {
   static uint old_dis = 0;
   static int old_min = 0;
@@ -677,4 +652,44 @@ int process_data(uint local_dis) {
   }
 
   return 0;
+}
+
+
+/*******************************************************************
+ *******************************************************************/
+void handle_errors(int error) {
+  switch (error) {
+    case 1:
+      error_count++;
+      Serial.print("Sigma fail ");
+      Serial.println(error_count);
+      break;
+    case 2:
+      error_count++;
+      Serial.print("Signal fail ");
+      Serial.println(error_count);
+      break;
+    case 3:
+      error_count++;
+      Serial.print("Range wrap ");
+      Serial.println(error_count);
+      break;
+    case 4:
+      error_count++;
+      Serial.print("Out of range ");
+      Serial.println(error_count);
+      break;
+    default:
+      error_count++;
+      Serial.print("Error count: ");
+      Serial.println(error_count);
+      break;
+  }
+
+  if (error_count >= MAX_ERRORS) {
+    Serial.print("Error count: ");
+    Serial.println(error_count);
+    recover_vl53lxx_sensor();
+    error_count = 0; // Reset counter after attempting recovery
+  }
 }
