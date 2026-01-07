@@ -4,7 +4,7 @@
  *  -Pico 2
  *  -TOF400C/VL53L1X - can handle about 30mm to 1200mm of range distance
  * Started: 29.09.2025
- * Edited:  06.01.2026
+ * Edited:  07.01.2026
  *
  * Links:
  * - https://arduino-pico.readthedocs.io/en/latest/platformio.html
@@ -38,14 +38,19 @@ auto_init_mutex(my_mutex);  // Race Condition Protection
 /*******************************************************************
  Constants
  *******************************************************************/
+// Memory addresses:
+constexpr int ADDRESS_MIN = 0; // Rotary Encoder MIN vale
+constexpr int ADDRESS_MAX = 4; // A 32-bit integer occupies 4 bytes of memory.
+// LED Colors (and pins)
+constexpr int GREEN = 2;
+constexpr int RED = 3;
+
 // I2C
 // SDA - GPIO4
 // SCL - GPIO5
 //constexpr int SENSOR_GPIO1_PIN = 6;  // Used to indicate that data is ready
 constexpr int SENSOR_XSHUT_PIN = 7;  // By default it's pulled high. When the pin is pulled low, the sensor goes into shutdown mode.
 
-constexpr int GREEN = 2;
-constexpr int RED = 3;
 constexpr int GREEN_LED_PIN = GREEN;
 constexpr int RED_LED_PIN = RED;
 
@@ -53,13 +58,11 @@ constexpr int RED_LED_PIN = RED;
 constexpr int MIN_RE_CLK_PIN = 16;
 constexpr int MIN_RE_DT_PIN = 17;
 constexpr int MIN_RE_SW_PIN = 18;
-constexpr int ADDRESS_MIN = 0;
 
 // MAX (Right) Rotary Encoder
 constexpr int MAX_RE_CLK_PIN = 19;
 constexpr int MAX_RE_DT_PIN = 20;
 constexpr int MAX_RE_SW_PIN = 21;
-constexpr int ADDRESS_MAX = 4; // A 32-bit integer occupies 4 bytes of memory.
 
 // Signal Out
 //constexpr int SIGNAL_OUT_1_PIN = 22; // Not used
@@ -77,6 +80,10 @@ constexpr int ENCODER_MAX_VALUE = 1200; //3000
 constexpr int ENCODER_SMALLEST_RANGE = 10;
 constexpr int DEBOUNCE_DELAY = 50;
 
+// Counters
+constexpr int MAX_ERRORS = 10;
+constexpr int CYCLE_MAX_COUNT = 5000; // Reset after
+
 /*******************************************************************
  Global Variables
  *******************************************************************/
@@ -84,10 +91,8 @@ volatile uint distance = 0;
 volatile int selected_value_min = 0;
 volatile int selected_value_max = 0;
 
-int error_count = 0;
-const int max_errors = 10;
-int counter = 0;
-int max_counter = 5000;
+volatile int error_count = 0;
+volatile int cycle_counter = 0;
 
 
 // OLED Screen
@@ -125,16 +130,21 @@ uint32_t read_memory_max_value();
 int write_memory_min_value(uint32_t value);
 int write_memory_max_value(uint32_t value);
 
+int process_data(uint local_dis);
+
 /*******************************************************************
  SETUP Core 0
  *******************************************************************/
 void setup() {
-  Serial.begin(115200); // 921600
+  Serial.begin(921600); // 921600 115200
   // Do not change! Serial pordi lugemisega tekivad probleemid!!!
   //Wire.setSDA(2); // default 4
   //Wire.setSCL(3); // default 5
+
+  Wire.setClock(100000); // Standard mode 100 kHz I2C
+  // Tekivad probleemid kui kasutada Fast mode
+  //Wire.setClock(400000); // Fast mode 400 kHz I2C
   Wire.begin();
-  Wire.setClock(400000); // use 400 kHz I2C
 
   //delay(3000);
   //i2c_scanner();
@@ -158,7 +168,7 @@ void setup() {
 void setup1() {
   init_ecoders();
   init_LED_pins();
-  // Signal output
+  // Init Signal output pin
   pinMode(SIGNAL_OUT_2_PIN,  OUTPUT);
   digitalWrite(SIGNAL_OUT_2_PIN, LOW);
 }
@@ -168,12 +178,7 @@ void setup1() {
  High-speed sensing and visual output
  *******************************************************************/
 void loop() {
-  static uint old_distance = 0;
-  static int old_selected_value_min = 0;
-  static int old_selected_value_max = 0;
   uint local_distace = 0;
-  int local_selected_value_min = 0;
-  int local_selected_value_max = 0;
 
   // Sensor
   VL53L0X_RangingMeasurementData_t measure;
@@ -183,79 +188,54 @@ void loop() {
   //Serial.print(measure.RangeStatus);
   //Serial.print(" D=");
 
-  //if (measure.RangeStatus != 4) {
-  // 1=sigma fail
-  // 2=signal fail
-  // 3=range wrap
-  // 4=out of range
   if (measure.RangeStatus == 0) {
+    //Serial.println(local_distace);
+    
+    cycle_counter++;
+
     mutex_enter_blocking(&my_mutex);
-      distance = measure.RangeMilliMeter;
+      distance = measure.RangeMilliMeter; // Global
       local_distace = distance;
     mutex_exit(&my_mutex);
 
-    // Simple EMA Filter: NewValue = (alpha * CurrentReading) + (1 - alpha) * OldValue
-    // Higher alpha (e.g., 0.3) = faster response, lower alpha (e.g., 0.05) = smoother
-    local_distace = (uint)(0.2 * measure.RangeMilliMeter) + (0.8 * local_distace);
+    // Reset error counter on success
+    error_count = process_data(local_distace);
 
-    //Serial.print(distance);
-    error_count = 0; // Reset error counter on success
-    counter++;
-
-    mutex_enter_blocking(&my_mutex);
-      local_selected_value_min = selected_value_min;
-    mutex_exit(&my_mutex);
-
-    mutex_enter_blocking(&my_mutex);
-      local_selected_value_max = selected_value_max;
-    mutex_exit(&my_mutex);
-    // Update display only when there is new data
-    if (local_distace != old_distance ||
-        local_selected_value_min != old_selected_value_min ||
-        local_selected_value_max != old_selected_value_max) {
-          // Display on screen
-          write_display(local_distace, local_selected_value_min, selected_value_max);
-
-          mutex_enter_blocking(&my_mutex);
-            old_distance = local_distace;
-          mutex_exit(&my_mutex);
-
-          mutex_enter_blocking(&my_mutex);
-            old_selected_value_min = local_selected_value_min;
-          mutex_exit(&my_mutex);
-
-          mutex_enter_blocking(&my_mutex);
-            old_selected_value_max = local_selected_value_max;
-          mutex_exit(&my_mutex);
-    }
-    
   } else if (measure.RangeStatus == 1) {
-    Serial.println("sigma fail");
+    error_count++;
+    Serial.print("Sigma fail ");
+    Serial.println(error_count);
   } else if (measure.RangeStatus == 2) {
-    Serial.println("signal fail");
+    error_count++;
+    Serial.print("Signal fail");
+    Serial.println(error_count);
   } else if (measure.RangeStatus == 3) {
-    Serial.println("range wrap");
+    error_count++;
+    Serial.print("Range wrap");
+    Serial.println(error_count);
   } else if (measure.RangeStatus == 4) {
-    Serial.println("out of range");
+    error_count++;
+    Serial.print("Out of range");
+    Serial.println(error_count);
   } else {
     error_count++;
     Serial.print("Error count: ");
     Serial.println(error_count);
   }
 
-
-  if (error_count >= max_errors) {
-    //Serial.print("Error count: ");
-    //Serial.println(error_count);
+  if (error_count >= MAX_ERRORS) {
+    Serial.print("Error count: ");
+    Serial.println(error_count);
     recover_vl53lxx_sensor();
     error_count = 0; // Reset counter after attempting recovery
   }
 
-  if (counter >= max_counter) {
-    Serial.print("Counter: ");
-    Serial.println(error_count);
-    //recover_vl53lxx_sensor();
-    counter = 0;
+  // Otherwise the sensor will freeze!
+  if (cycle_counter >= CYCLE_MAX_COUNT) {
+    Serial.print("Cycle counter: ");
+    Serial.println(cycle_counter);
+    recover_vl53lxx_sensor();
+    cycle_counter = 0;
   }
 
 }
@@ -650,7 +630,7 @@ int write_memory_max_value(uint32_t value) {
  Reset vl53lxx sensor
  *******************************************************************/
 void recover_vl53lxx_sensor() {
-  Serial.println("Communication error detected. Resetting sensor...");
+  Serial.println("Resetting sensor...");
   
   // 1. Hardware Reset: Pull XSHUT low to shut down the sensor
   vl53lxx_sensor_OFF(); 
@@ -666,4 +646,35 @@ void recover_vl53lxx_sensor() {
   } else {
     Serial.println("Sensor recovered successfully.");
   }
+}
+
+int process_data(uint local_dis) {
+  static uint old_dis = 0;
+  static int old_min = 0;
+  static int old_max = 0;
+
+  int local_min = 0;
+  int local_max = 0;
+
+  // Simple EMA Filter: NewValue = (alpha * CurrentReading) + (1 - alpha) * OldValue
+  // Higher alpha (e.g., 0.3) = faster response, lower alpha (e.g., 0.05) = smoother
+  local_dis = (uint)(0.2 * local_dis) + (0.8 * old_dis);
+
+  mutex_enter_blocking(&my_mutex);
+    local_min = selected_value_min;
+  mutex_exit(&my_mutex);
+
+  mutex_enter_blocking(&my_mutex);
+    local_max = selected_value_max;
+  mutex_exit(&my_mutex);
+
+  // Update display only when there is new data
+  if (local_dis != old_dis || local_min != old_min || local_max != old_max) {
+    write_display(local_dis, local_min, local_max);
+    old_dis = local_dis;
+    old_min = local_min;
+    old_max = local_max;
+  }
+
+  return 0;
 }
