@@ -38,6 +38,7 @@ auto_init_mutex(my_mutex);  // Race Condition Protection
 /*******************************************************************
  Constants
  *******************************************************************/
+constexpr int VERSION = 260107;
 // Memory addresses:
 constexpr int ADDRESS_MIN = 0; // Rotary Encoder MIN vale
 constexpr int ADDRESS_MAX = 4; // A 32-bit integer occupies 4 bytes of memory.
