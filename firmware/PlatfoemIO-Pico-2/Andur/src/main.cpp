@@ -4,7 +4,7 @@
  *  -Pico 2
  *  -TOF400C/VL53L1X - can handle about 30mm to 1200mm of range distance
  * Started: 29.09.2025
- * Edited:  07.01.2026
+ * Edited:  14.01.2026
  *
  * Links:
  * - https://arduino-pico.readthedocs.io/en/latest/platformio.html
@@ -56,14 +56,14 @@ constexpr int GREEN_LED_PIN = GREEN;
 constexpr int RED_LED_PIN = RED;
 
 // MIN (Left) Rotary Encoder
-constexpr int MIN_RE_CLK_PIN = 16;
-constexpr int MIN_RE_DT_PIN = 17;
-constexpr int MIN_RE_SW_PIN = 18;
+constexpr int MIN_RE_CLK_PIN = 19; //16;
+constexpr int MIN_RE_DT_PIN = 20; //17;
+constexpr int MIN_RE_SW_PIN = 21; //18;
 
 // MAX (Right) Rotary Encoder
-constexpr int MAX_RE_CLK_PIN = 19;
-constexpr int MAX_RE_DT_PIN = 20;
-constexpr int MAX_RE_SW_PIN = 21;
+constexpr int MAX_RE_CLK_PIN = 16; //19;
+constexpr int MAX_RE_DT_PIN = 17; //20;
+constexpr int MAX_RE_SW_PIN = 18; //21;
 
 // Signal Out
 //constexpr int SIGNAL_OUT_1_PIN = 22; // Not used
@@ -83,7 +83,7 @@ constexpr int DEBOUNCE_DELAY = 50;
 
 // Counters
 constexpr int MAX_ERRORS = 10;
-constexpr int CYCLE_MAX_COUNT = 6000; // Reset after
+constexpr int CYCLE_MAX_COUNT = 3000; // Reset after
 
 /*******************************************************************
  Global Variables
@@ -138,12 +138,17 @@ void handle_errors(int error);
  SETUP Core 0
  *******************************************************************/
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+
   Serial.begin(921600); // 921600 115200
+  //delay(1000);
+  //Serial.println("Andur");
   // Do not change! Serial pordi lugemisega tekivad probleemid!!!
   //Wire.setSDA(2); // default 4
   //Wire.setSCL(3); // default 5
 
-  Wire.setClock(100000); // Standard mode 100 kHz I2C
+  //Wire.setClock(100000); // Standard mode 100 kHz I2C
   // Tekivad probleemid kui kasutada Fast mode
   //Wire.setClock(400000); // Fast mode 400 kHz I2C
   Wire.begin();
@@ -178,7 +183,10 @@ void setup1() {
  High-speed sensing and visual output
  *******************************************************************/
 void loop() {
-  uint local_distace = 0;
+  static uint local_distace = 0;
+  static uint old_local_distace = 0;
+  static unsigned long last_display_time = millis();
+  static unsigned long last_sensor_success = 0;
 
   // Sensor
   VL53L0X_RangingMeasurementData_t measure;
@@ -191,24 +199,56 @@ void loop() {
   if (status == 0) {
     mutex_enter_blocking(&my_mutex);
       distance = measure.RangeMilliMeter; // Global
-      local_distace = distance;
+      // Simple EMA Filter: NewValue = (alpha * CurrentReading) + (1 - alpha) * OldValue
+      // Higher alpha (e.g., 0.3) = faster response, lower alpha (e.g., 0.05) = smoother
+      local_distace = (uint)(0.2 * distance) + (0.8 * old_local_distace);
+      //local_distace = distance;
     mutex_exit(&my_mutex);
 
-    error_count = process_data(local_distace); // Reset error counter on success
+    old_local_distace = local_distace;
+    last_sensor_success = millis();
+    error_count = 0;
+    //error_count = process_data(local_distace); // Reset error counter on success
+
     cycle_counter++;
+    Serial.print("Cycle counter: ");
+    Serial.print(cycle_counter);
+    Serial.print(" : ");
 
   } else {
     handle_errors(status);
   }
 
-  // Otherwise the sensor will freeze!
+  // Restart time to time
+  /*
   if (cycle_counter >= CYCLE_MAX_COUNT) {
     Serial.print("Cycle counter: ");
     Serial.println(cycle_counter);
     recover_vl53lxx_sensor();
     cycle_counter = 0;
   }
-}
+    */
+
+  // Watchdog to reset sensor
+  if (millis() - last_sensor_success > 2000) {
+    recover_vl53lxx_sensor();
+    cycle_counter = 0;
+  }
+
+  // Propably a error
+  if (local_distace > 3000) {
+    recover_vl53lxx_sensor();
+    cycle_counter = 0;
+  }
+
+  // Display data ebery 300 ms
+  if ((unsigned long)(millis() - last_display_time) >= 300) {
+    Serial.print("* ");
+    process_data(local_distace);
+    last_display_time = millis();
+  }
+} // loop() end
+
 
 
 /*******************************************************************
@@ -284,6 +324,7 @@ void init_LED_pins() {
  Initialises OLED screen.
  *******************************************************************/
 void init_display() {
+  Serial.print(F("SSD1306 init: "));
    // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
    // SSD1306_EXTERNALVCC
   if(!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
@@ -293,10 +334,13 @@ void init_display() {
       delay(500);
     }
   }
-
+  Serial.println("SSD1306 OK!");
+  
   mutex_enter_blocking(&my_mutex);
     uint local_distace = distance;
   mutex_exit(&my_mutex);
+
+  display.setRotation(2); //rotates text on OLED 1=90 degrees, 2=180 degrees
 
   write_display(local_distace, selected_value_min, selected_value_max);
 }
@@ -309,7 +353,7 @@ void init_display() {
  *****************************************************************/
 void write_display(long dis, int min, int max) {
   display.clearDisplay();
-
+  //display.setRotation(2); //rotates text on OLED 1=90 degrees, 2=180 degrees
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
 
@@ -326,6 +370,8 @@ void write_display(long dis, int min, int max) {
   display.print(F("min:"));
   display.print(min);
 
+  display.setCursor(50, 20);
+
   display.print(F("  max:"));
   display.print(max);
 
@@ -338,7 +384,7 @@ void write_display(long dis, int min, int max) {
  VL53Lxx-v2
  *******************************************************************/
 void init_vl53lxx_sensor() {
-  Serial.println("Init VL53L0X sensor");
+  Serial.print("Init VL53L0X sensor: ");
 
   // Shutdown pin
   pinMode(SENSOR_XSHUT_PIN, OUTPUT);
@@ -353,11 +399,14 @@ void init_vl53lxx_sensor() {
     delay(100);
   }
 
+  
+
   // Adafruit_VL53L0X::VL53L0X_SENSE_DEFAULT
   // Adafruit_VL53L0X::VL53L0X_SENSE_LONG_RANGE
   // Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_SPEED
   // Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_ACCURACY
   vl53lxx_sensor.configSensor(Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_ACCURACY);
+  Serial.println("VL53L0X OK!");
 }
 
 /*******************************************************************
@@ -606,15 +655,16 @@ int write_memory_max_value(uint32_t value) {
  Reset vl53lxx sensor
  *******************************************************************/
 void recover_vl53lxx_sensor() {
+  int delay_val = 70;
   Serial.println("Resetting sensor...");
   
   // 1. Hardware Reset: Pull XSHUT low to shut down the sensor
   vl53lxx_sensor_OFF(); 
-  delay(50); // Give it time to fully discharge
+  delay(delay_val); // Give it time to fully discharge
   
   // 2. Power back on
   vl53lxx_sensor_ON();
-  delay(50); // Wait for the sensor to boot
+  delay(delay_val); // Wait for the sensor to boot
   
   // 3. Re-initialize the library
   if (!vl53lxx_sensor.begin()) {
@@ -626,6 +676,9 @@ void recover_vl53lxx_sensor() {
 
 
 /*******************************************************************
+TODO: Ekraanile kirjutamine tuleks teha eraldi protsessiks
+      ja teises tuumas jooksutada.
+      Et oleks kiirem ja ei segaks muud loogikat.
  *******************************************************************/
 int process_data(uint local_dis) {
   static uint old_dis = 0;
@@ -637,7 +690,8 @@ int process_data(uint local_dis) {
 
   // Simple EMA Filter: NewValue = (alpha * CurrentReading) + (1 - alpha) * OldValue
   // Higher alpha (e.g., 0.3) = faster response, lower alpha (e.g., 0.05) = smoother
-  local_dis = (uint)(0.2 * local_dis) + (0.8 * old_dis);
+  //local_dis = (uint)(0.2 * local_dis) + (0.8 * old_dis);
+  Serial.println(local_dis);
 
   mutex_enter_blocking(&my_mutex);
     local_min = selected_value_min;
