@@ -4,7 +4,7 @@
  *  -Pico 2
  *  -TOF400C/VL53L1X - can handle about 30mm to 1200mm of range distance
  * Started: 29.09.2025
- * Edited:  14.01.2026
+ * Edited:  20.01.2026
  *
  * Links:
  * - https://arduino-pico.readthedocs.io/en/latest/platformio.html
@@ -211,9 +211,9 @@ void loop() {
     //error_count = process_data(local_distace); // Reset error counter on success
 
     cycle_counter++;
-    Serial.print("Cycle counter: ");
-    Serial.print(cycle_counter);
-    Serial.print(" : ");
+    //Serial.print("Cycle counter: ");
+    //Serial.print(cycle_counter);
+    //Serial.print(" : ");
 
   } else {
     handle_errors(status);
@@ -243,7 +243,7 @@ void loop() {
 
   // Display data ebery 300 ms
   if ((unsigned long)(millis() - last_display_time) >= 300) {
-    Serial.print("* ");
+    //Serial.print("* ");
     process_data(local_distace);
     last_display_time = millis();
   }
