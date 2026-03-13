@@ -3,8 +3,8 @@
  * Hardware:
  *  -Pico 2
  *  -TOF400C/VL53L1X - can handle about 30mm to 1200mm of range distance
- * Started: 29.09.2025
- * Edited:  20.01.2026
+ * Started: 2025.09.29
+ * Edited:  2026.03.13
  *
  * Links:
  * - https://arduino-pico.readthedocs.io/en/latest/platformio.html
@@ -33,15 +33,15 @@
 #include "pio_encoder.h"       // https://github.com/gbr1/rp2040-encoder-library
 #include <EEPROM.h>
 
-auto_init_mutex(my_mutex);  // Race Condition Protection
+auto_init_mutex(my_mutex);     // Race Condition Protection
 
 /*******************************************************************
  Constants
  *******************************************************************/
-constexpr int VERSION = 260107;
+constexpr int VERSION = 260313;  // not used!
 // Memory addresses:
-constexpr int ADDRESS_MIN = 0; // Rotary Encoder MIN vale
-constexpr int ADDRESS_MAX = 4; // A 32-bit integer occupies 4 bytes of memory.
+constexpr int ADDRESS_MIN = 0;  // Rotary Encoder MIN vale
+constexpr int ADDRESS_MAX = 4;  // A 32-bit integer occupies 4 bytes of memory.
 // LED Colors (and pins)
 constexpr int GREEN = 2;
 constexpr int RED = 3;
@@ -52,38 +52,48 @@ constexpr int RED = 3;
 //constexpr int SENSOR_GPIO1_PIN = 6;  // Used to indicate that data is ready
 constexpr int SENSOR_XSHUT_PIN = 7;  // By default it's pulled high. When the pin is pulled low, the sensor goes into shutdown mode.
 
+// Sensor mode
+typedef enum {
+    MODE_DEFAULT,
+    MODE_LONG_RANGE,
+    MODE_HIGH_SPEED,
+    MODE_HIGH_ACCURACY
+} sensor_mode_t;
+
+sensor_mode_t sensor_mode = MODE_DEFAULT;
+
 constexpr int GREEN_LED_PIN = GREEN;
 constexpr int RED_LED_PIN = RED;
 
 // MIN (Left) Rotary Encoder
-constexpr int MIN_RE_CLK_PIN = 19; //16;
-constexpr int MIN_RE_DT_PIN = 20; //17;
-constexpr int MIN_RE_SW_PIN = 21; //18;
+constexpr int MIN_RE_CLK_PIN = 19; // 16;
+constexpr int MIN_RE_DT_PIN = 20;  // 17;
+constexpr int MIN_RE_SW_PIN = 21;  // 18;
 
 // MAX (Right) Rotary Encoder
-constexpr int MAX_RE_CLK_PIN = 16; //19;
-constexpr int MAX_RE_DT_PIN = 17; //20;
-constexpr int MAX_RE_SW_PIN = 18; //21;
+constexpr int MAX_RE_CLK_PIN = 16; // 19;
+constexpr int MAX_RE_DT_PIN = 17;  // 20;
+constexpr int MAX_RE_SW_PIN = 18;  // 21;
 
 // Signal Out
 //constexpr int SIGNAL_OUT_1_PIN = 22; // Not used
 constexpr int SIGNAL_OUT_2_PIN = 15;
 
 // OLED Screen
-constexpr int SCREEN_WIDTH = 128;  // px
-constexpr int SCREEN_HEIGHT = 32;  // px
-constexpr int OLED_RESET = -1;  // Reset pin # (or -1 if sharing Arduino reset pin)
+constexpr int SCREEN_WIDTH = 128;         // px
+constexpr int SCREEN_HEIGHT = 32;         // px
+constexpr int OLED_RESET = -1;            // Reset pin # (or -1 if sharing Arduino reset pin)
 constexpr uint8_t SCREEN_ADDRESS = 0x3C;  // 0x3D for 128x64, 0x3C for 128x32
 
 // Rotary Encoder
 constexpr int ENCODER_MIN_VALUE = 0;
-constexpr int ENCODER_MAX_VALUE = 1200; //3000
+constexpr int ENCODER_MAX_VALUE = 1200;    // 3000
 constexpr int ENCODER_SMALLEST_RANGE = 10;
 constexpr int DEBOUNCE_DELAY = 50;
 
 // Counters
 constexpr int MAX_ERRORS = 10;
-constexpr int CYCLE_MAX_COUNT = 3000; // Reset after
+constexpr int CYCLE_MAX_COUNT = 3000;  // Reset after
 
 /*******************************************************************
  Global Variables
@@ -114,7 +124,7 @@ void i2c_scanner();
 void init_LED_pins();
 void init_display();
 void write_display(long dis, int min, int max);
-void init_vl53lxx_sensor();
+void init_vl53lxx_sensor(sensor_mode_t mode);
 void recover_vl53lxx_sensor();
 
 void vl53lxx_sensor_OFF();
@@ -133,6 +143,8 @@ int write_memory_max_value(uint32_t value);
 
 int process_data(uint local_dis);
 void handle_errors(int error);
+
+void blink_builtin_led();
 
 /*******************************************************************
  SETUP Core 0
@@ -161,7 +173,7 @@ void setup() {
   selected_value_min = read_memory_min_value();
   selected_value_max = read_memory_max_value();
 
-  init_vl53lxx_sensor();
+  init_vl53lxx_sensor(sensor_mode);
 
   init_display();
 }
@@ -214,8 +226,9 @@ void loop() {
     //Serial.print("Cycle counter: ");
     //Serial.print(cycle_counter);
     //Serial.print(" : ");
-
+    digitalWrite(LED_BUILTIN, HIGH);
   } else {
+    blink_builtin_led();
     handle_errors(status);
   }
 
@@ -340,7 +353,7 @@ void init_display() {
     uint local_distace = distance;
   mutex_exit(&my_mutex);
 
-  display.setRotation(2); //rotates text on OLED 1=90 degrees, 2=180 degrees
+  display.setRotation(2);  // rotates text on OLED 1=90 degrees, 2=180 degrees
 
   write_display(local_distace, selected_value_min, selected_value_max);
 }
@@ -383,7 +396,7 @@ void write_display(long dis, int min, int max) {
  Initialises TOF sensor
  VL53Lxx-v2
  *******************************************************************/
-void init_vl53lxx_sensor() {
+void init_vl53lxx_sensor(sensor_mode_t mode) {
   Serial.print("Init VL53L0X sensor: ");
 
   // Shutdown pin
@@ -399,13 +412,28 @@ void init_vl53lxx_sensor() {
     delay(100);
   }
 
-  
-
   // Adafruit_VL53L0X::VL53L0X_SENSE_DEFAULT
   // Adafruit_VL53L0X::VL53L0X_SENSE_LONG_RANGE
   // Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_SPEED
   // Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_ACCURACY
-  vl53lxx_sensor.configSensor(Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_ACCURACY);
+  switch (mode) {
+    case MODE_DEFAULT:
+      vl53lxx_sensor.configSensor(Adafruit_VL53L0X::VL53L0X_SENSE_DEFAULT);
+      break;
+    case MODE_LONG_RANGE:
+      vl53lxx_sensor.configSensor(Adafruit_VL53L0X::VL53L0X_SENSE_LONG_RANGE);
+      break;
+    case MODE_HIGH_SPEED:
+      vl53lxx_sensor.configSensor(Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_SPEED);
+      break;
+    case MODE_HIGH_ACCURACY:
+      vl53lxx_sensor.configSensor(Adafruit_VL53L0X::VL53L0X_SENSE_HIGH_ACCURACY);
+      break;
+    default:
+      vl53lxx_sensor.configSensor(Adafruit_VL53L0X::VL53L0X_SENSE_DEFAULT);
+      break;
+  }
+
   Serial.println("VL53L0X OK!");
 }
 
@@ -719,27 +747,27 @@ void handle_errors(int error) {
   switch (error) {
     case 1:
       error_count++;
-      Serial.print("Sigma fail ");
+      Serial.print("*Sigma fail ");
       Serial.println(error_count);
       break;
     case 2:
       error_count++;
-      Serial.print("Signal fail ");
+      Serial.print("*Signal fail ");
       Serial.println(error_count);
       break;
     case 3:
       error_count++;
-      Serial.print("Range wrap ");
+      Serial.print("*Range wrap ");
       Serial.println(error_count);
       break;
     case 4:
       error_count++;
-      Serial.print("Out of range ");
+      Serial.print("*Out of range ");
       Serial.println(error_count);
       break;
     default:
       error_count++;
-      Serial.print("Error count: ");
+      Serial.print("*Error count: ");
       Serial.println(error_count);
       break;
   }
@@ -749,5 +777,20 @@ void handle_errors(int error) {
     Serial.println(error_count);
     recover_vl53lxx_sensor();
     error_count = 0; // Reset counter after attempting recovery
+  }
+}
+
+void blink_builtin_led() {
+  unsigned long currentMillis = millis();
+  const int ledPin = LED_BUILTIN;
+  const unsigned long interval = 100;  // blink every 500 ms
+  static unsigned long previousMillis = 0;
+  static bool ledState = false;
+
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+
+    ledState = !ledState;           // toggle LED state
+    digitalWrite(ledPin, ledState); // update LED
   }
 }
